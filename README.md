@@ -250,7 +250,7 @@ Ao final da configuração de um workflow, é também possível gerar um arquivo
 
 ---
 
-## 5. Análise
+## 7. Análise
 
 ### a. Qualidade dos Dados
 
@@ -262,28 +262,114 @@ Foi realizada uma análise de qualidade para os principais atributos dos conjunt
 - Presença de *outliers*  
 
 Os dados analisados apresentaram bom nível de qualidade, compatível com bases previamente curadas. Ainda assim, foram realizadas validações estatísticas e exploratórias para garantir que eventuais inconsistências não impactassem as análises finais.
-
 ---
 
-### b. Solução do Problema
+### b. Perguntas
 
-Com os dados organizados na camada Gold, foram realizadas análises analíticas utilizando **SQL**, permitindo responder às perguntas definidas na etapa de objetivos.
+As perguntas poderiam ter sido respondidas no ambiente do Databricks, no entanto, escolhi criar um ambiente separado de analytics usando o [Metabase](https://www.metabase.com/), um serviço open-source de BI e dashboards.
 
-Entre os principais resultados obtidos, destacam-se:
+No Metabase é possível definir "Questions", que podem ser consultas SQL. Após criar as *questions*, organizadas em coleções lógicas específicas, elas podem ser usadas para criar dashboards.
 
-- Evolução dos custos assistenciais ao longo do tempo  
-- Cálculo do custo médio por beneficiário  
-- Comparações entre diferentes tipos de operadoras  
-- Identificação de padrões relevantes para apoio à tomada de decisão  
+#### 1. Qual é o atual índice de sinistralidade no setor de seguros de saúde? Ele está abaixo ou acima da média histórica?
 
-Cada resultado foi discutido de forma crítica, conectando os valores obtidos aos objetivos iniciais do MVP.
+O índice de sinistralidade é um importante indicador de **rentabilidade** no setor de seguros, de forma abrangente. No segmento de planos médico-hospitalares não é diferente. Esse indicador consiste na razão entre os "eventos indenizáveis" (sinistros), ou seja, despesas com assistência médica, e o total de receitas obtidas através dos planos de saúde.
 
-Ao final, foi possível concluir que o pipeline construído atende ao objetivo proposto, fornecendo uma base sólida, governada e escalável para análises futuras.
+Uma métrica de sinistralidade elevada indica que uma grande parte da receita está sendo gasta com os custos referentes aos sinistros, o que pode sinalizar a necessidade de reajustes ou adequação dos serviços oferecidos para garantir a sustentabilidade financeira da operadora. 
+
+Já um índice muito baixo pode indicar uma operação pouco competitiva ou a subutilização dos serviços de saúde, o que também deve ser cuidadosamente monitorado para garantir um equilíbrio justo entre a prestação de serviços e a viabilidade econômica da operadora.
+
+```sql
+SELECT ANO, AVG(SINISTRALIDADE) AS INDEX_SINISTRALIDADE
+FROM sinistralidade
+WHERE SINISTRALIDADE > 0 AND SINISTRALIDADE < 100
+GROUP BY ANO
+ORDER BY ANO ASC;
+```
+
+![Sinistralidade](Imagens/sinistralidade.png)
+
+O atual índice de sinistralidade é de **71,79%**, que está um pouco acima da média histórica, considerando os últimos anos.
+
+O que chama atenção no gráfico é o ano de 2020, em que se observa uma queda fora do padrão da sinistralidade. Esse fenômeno ocorreu em razão da pandemia do COVID-19, que iniciou em 2020, e fez com que a procura por atendimentos médicos tivesse uma forte queda.
+
+Essa constatação pode parecer contraintuitiva, mas o que observou-se foi uma redução da procura por consultas e procedimentos não emergenciais, exames de rotinas, entre outros, o que impactou na sinistralidade. Após o período do isolamento, houve um crescimento acentuado da sinistralidade, devido a demanda reprimida do período da pandemia, o que deixou muitas empresas do segmento em situação financeira pouco confortável.
+
+#### 2 e 3. Qual é a seguradora mais eficiente do ponto de vista de custo por beneficiário? Qual é o market share em número de beneficiários no segmento médico-hospitalar?
+
+O custo por beneficiário é uma métria de **eficiência** das operadoras de planos de saúdes, que calcula o valor médio gasto pela operadora para fornecer os serviços de saúde para cada beneficiário durante um ano. 
+
+As operadoras atuam em diferentes modelos de negócio, que resultam em estruturas de custo diferentes. Modelos de negócio mais verticalizados, ou seja, operadoras que possuem seus próprios hospitais, clínicas e laboratórios, tendem a ter um controle maior sobre a operação, consequentemente sobre os custos, a qualidade dos serviços prestados e eliminando intermediários. 
+
+Outro fator que pode impactar no custo por beneficiário é o market share, que indica o **tamanho** da empresa no mercado em comparação aos concorrentes. O market share poder ser medido de diferentes formas, mas nesse caso está sendo considerado o número de beneficiários.
+
+Empresas maiores, especialmente nesse setor, costumam apresentar ganhos de eficiência e vantagens competitivas, em razão do tamanho, pois a operadora pode otimizar os recursos, negociando melhores preços de medicamentos e equipamentos, em função da escala. Isso também tem grande impacto no custo por beneficiário.
+
+```sql
+SELECT 
+    CASE 
+        WHEN LENGTH(market_share.NOME_FANTASIA) > 16 THEN SUBSTRING(market_share.NOME_FANTASIA FROM 1 FOR 16) || '...'
+        ELSE market_share.NOME_FANTASIA
+    END AS NOME_FANTASIA,
+    market_share.MARKET_SHARE,
+    custo_beneficiario.CUSTO_BENEFICIARIO
+FROM market_share
+LEFT JOIN custo_beneficiario
+ON market_share.CD_OPERADORA = custo_beneficiario.REG_ANS
+LIMIT 10;
+```
+
+![Share Custo](Imagens/share_custo.png)
+
+A Hapvida, que é líder do setor, recentemente adquiriu a Notre Dame Intermédica e todas sua rede hospitalar, consolidando um conglomerado de quase **15%** do mercado de planos de saúde, cerca de **7,65 milhões** de beneficiários.
+
+A Hapvida x Intermédica é uma empresa verticalizada, ou seja, ela comercializa os planos de saúde e é dona dos hospitais que prestam serviço para esses planos, o que permite a empresa ter um controle muito maior sobre suas margens, além de se aproveitar dos ganhos de escala.
+
+Esses fatores combinados são os motivos da empresa ter um dos menores custos por beneficiário do mercado, tendo o menor custo entre as 10 maiores, de apenas **R$ 717,54** por beneficiário/ano.
+
+Na ponta oposta, como exemplo, podemos citar o Bradesco Seguros, que não possui nenhum ou rede própria, e terceiriza a prestação dos serviços oferecidos pelos seus planos. O Bradesco, que atualmente é a segunda maior empresa do segmento, se consideramento a junção entre Hapvida e Intermédica, possui um custo médio por beneficiário de **R$ 7.200,00** por ano.
+
+#### 4. Quantas empresas de plano de saúde existem no Brasil?
+
+Atualmente, existem **850** operadoras ativas no Brasil.
+
+```sql
+SELECT DISTINCT COUNT(*) FROM num_operadoras;
+```
+
+#### 5. Quantos beneficiários existem no Brasil? Qual é a taxa de cobertura?
+
+Existem no Brasil cerca de **51 milhões** de beneficiários de planos médico-hospitalares, com ou sem assistência odontológica. Se considermos o tamanho da população brasileira de cerca de 215 milhões, calculamos uma taxa de cobertura de aproximadamente **23%**.
+
+Isso significa que menos de 1/4 da população brasileira possui plano de saúde.
+
+```sql
+SELECT DISTINCT SUM(TOTAL_BENEFICIARIOS) FROM num_beneficiarios;
+
+SELECT DISTINCT SUM("TOTAL_BENEFICIARIOS") / 215300000 FROM num_beneficiarios;
+```
+
+#### 6. Existem mais planos individuais ou coletivos?
+
+Entre os mais de 50 milhões de beneficiários, somente **17%** deles possuem planos individuais ou familiares. A grande maioria dos planos são coletivos, somando **83%**, sendo em grande parte planos empresariais.
+
+```sql
+WITH total_beneficiarios AS (
+    SELECT SUM("TOTAL_BENEFICIARIOS") AS "TOTAL" FROM num_beneficiarios
+)
+
+SELECT 
+    "TIPO_CONTRATACAO_PLANO", 
+    ROUND(SUM("TOTAL_BENEFICIARIOS") / total_beneficiarios."TOTAL", 2) AS "BENEFICIARIOS_RATIO"
+FROM num_beneficiarios, total_beneficiarios
+GROUP BY "TIPO_CONTRATACAO_PLANO", total_beneficiarios."TOTAL";
+```
+
+![Pizza](Imagens/pizza.png)
 
 ---
 
 ## Conclusão
 
 Este MVP demonstrou a viabilidade da construção de um pipeline de dados completo em nuvem, utilizando tecnologias modernas como **Databricks e Delta Lake**, desde a ingestão até a análise final.
-
 A solução desenvolvida atende aos requisitos propostos, respeitando boas práticas de engenharia de dados, modelagem analítica e governança, além de permitir extensões futuras para análises mais avançadas.
+Como venho de uma área fora de dados (Comércio Exterior), esse posso dizer com propriedade que foi o projeto mais desafiador até o momento, muitos assuntos e ferramentas novas, aplicação de conhementos adquiridos na pós, além de outros cursos relacionados que tenho feito.

@@ -167,23 +167,23 @@ Aqui estão os links para os arquivos:
 
 #### Bronze
 
-- [bronze_beneficiarios.py](https://github.com/ianaraujo/puc-engenharia-dados/blob/master/src/bronze/bronze_beneficiarios.py)
-- [bronze_demonstracoes_contabeis.py](https://github.com/ianaraujo/puc-engenharia-dados/blob/master/src/bronze/bronze_demonstracoes_contabeis.py)
-- [bronze_operadoras.py](https://github.com/ianaraujo/puc-engenharia-dados/blob/master/src/bronze/bronze_operadoras.py)
+- [bronze_beneficiarios.py](https://github.com/GustavoG0mes/MVP3/blob/main/src/bronze/bronze_beneficiarios.py)
+- [bronze_demonstracoes_contabeis.py](https://github.com/GustavoG0mes/MVP3/blob/main/src/bronze/bronze_demonstracoes_contabeis.py)
+- [bronze_operadoras.py](https://github.com/GustavoG0mes/MVP3/blob/main/src/bronze/bronze_operadoras.py)
 
 #### Silver
 
-- [silver_beneficiarios.py](https://github.com/ianaraujo/puc-engenharia-dados/blob/master/src/silver/silver_beneficiarios.py)
-- [silver_demonstracoes_contabeis.py](https://github.com/ianaraujo/puc-engenharia-dados/blob/master/src/silver/silver_demonstracoes_contabeis.py)
-- [silver_operadoras.py](https://github.com/ianaraujo/puc-engenharia-dados/blob/master/src/silver/silver_operadoras.py)
+- [silver_beneficiarios.py](https://github.com/GustavoG0mes/MVP3/blob/main/src/silver/silver_beneficiarios.py)
+- [silver_demonstracoes_contabeis.py](https://github.com/GustavoG0mes/MVP3/blob/main/src/silver/silver_demonstracoes_contabeis.py)
+- [silver_operadoras.py](https://github.com/GustavoG0mes/MVP3/blob/main/src/silver/silver_operadoras.py)
 
 #### Gold
 
-- [sinistralidade.py](https://github.com/ianaraujo/puc-engenharia-dados/blob/master/src/gold/sinistralidade.py)
-- [custo_beneficiario.sql](https://github.com/ianaraujo/puc-engenharia-dados/blob/master/src/gold/custo_beneficiario.sql)
-- [num_beneficiarios.sql](https://github.com/ianaraujo/puc-engenharia-dados/blob/master/src/gold/num_beneficiarios.sql)
-- [num_operadoras.sql](https://github.com/ianaraujo/puc-engenharia-dados/blob/master/src/gold/num_beneficiarios.sql)
-- [market_share.sql](https://github.com/ianaraujo/puc-engenharia-dados/blob/master/src/gold/market_share.sql)
+- [sinistralidade.py](https://github.com/GustavoG0mes/MVP3/blob/main/src/gold/sinistralidade.py)
+- [custo_beneficiario.sql](https://github.com/GustavoG0mes/MVP3/blob/main/src/gold/custo_beneficiario.sql)
+- [num_beneficiarios.sql](https://github.com/GustavoG0mes/MVP3/blob/main/src/gold/num_beneficiarios.sql)
+- [num_operadoras.sql](https://github.com/GustavoG0mes/MVP3/blob/main/src/gold/num_operadoras.sql)
+- [market_share.sql](https://github.com/GustavoG0mes/MVP3/blob/main/src/gold/market_share.sql)
 
 ---
 
@@ -261,7 +261,8 @@ Foi realizada uma análise de qualidade para os principais atributos dos conjunt
 - Coerência entre campos relacionados  
 - Presença de *outliers*  
 
-Os dados analisados apresentaram bom nível de qualidade, compatível com bases previamente curadas. Ainda assim, foram realizadas validações estatísticas e exploratórias para garantir que eventuais inconsistências não impactassem as análises finais.
+- Os dados analisados apresentaram bom nível de qualidade, compatível com bases previamente curadas. Ainda assim, foram realizadas validações estatísticas e exploratórias para garantir que eventuais inconsistências não impactassem as análises finais.
+
 ---
 
 ### b. Perguntas

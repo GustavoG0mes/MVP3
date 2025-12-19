@@ -79,7 +79,7 @@ Essa separação facilita a governança, o versionamento e a rastreabilidade dos
 
 ---
 
-### Catálogo de Dados e Linhagem
+##Catálogo de Dados e Linhagem
 
 O pipeline do trabalho utiliza o framework Delta e as tabelas são processadas em camadas bronze, silver e gold.
 
@@ -93,14 +93,45 @@ Podemos observar que no esquema das tabelas da camada bronze há maior dimension
 
 Um exemplo é na coluna "CNPJ" da tabela bronze.ans.operadoras, que ao ler os dados usando Spark, foi inferido um tipo bigint, enquanto o correto seria string. Essa transformação é feita na camada prata e na tabela silver.ans.operadorasjá podemos ver a mudança feita.
 
-O código utilizado para transformação desses dados na camada silver pode ser encontrado em /src/silver/silver_operadoras.py .
+O código utilizado para transformação desses dados na camada silver pode ser encontrado em [/src/silver/silver_operadoras.py](https://github.com/GustavoG0mes/MVP3/blob/main/src/silver/silver_operadoras.py).
 
 silver_operadoras.py
 
-(Colocar o código)
+```python
+df = spark.sql(f'SELECT * FROM bronze.{schema}.{table}')
+
+upper_cols = [col.upper() for col in df.columns]
+
+df = df.toDF(*upper_cols)
+
+final = df \
+    .withColumn('REGISTRO_ANS', df['REGISTRO_ANS'].cast('string')) \
+    .withColumn('RAZAO_SOCIAL', F.regexp_replace(F.col('RAZAO_SOCIAL'), r'[./]', '')) \
+    .withColumn('RAZAO_SOCIAL', F.regexp_replace(F.col('RAZAO_SOCIAL'), r'\b(LTDA|SA|EIRELI|ME|EPP)\b', '')) \
+    .withColumn('RAZAO_SOCIAL', F.regexp_replace(F.col('RAZAO_SOCIAL'), r' - $', '')) \
+    .withColumn('CNPJ', df['CNPJ'].cast('string')) \
+    .select(
+        'DATA_REGISTRO_ANS',
+        'REGISTRO_ANS',
+        'CNPJ',
+        'RAZAO_SOCIAL',
+        'NOME_FANTASIA',
+        'MODALIDADE'
+    )
+
+final = final.withColumn('NOME_FANTASIA', F.when(
+    F.col('NOME_FANTASIA').isNull(), F.col('RAZAO_SOCIAL')).otherwise(F.col('NOME_FANTASIA')
+))
+
+
+final.write.mode('overwrite').format('delta').saveAsTable(f'silver.{schema}.{table}')
+```
 
 Destaque para o código que transforma os dados da coluna "CNPJ" em string.
-(Código)
+
+```python
+.withColumn('CNPJ', df['CNPJ'].cast('string'))
+```
 
 Além dessa transformação, na camada silver, é feito um tratamento da "RAZAO_SOCIAL", removendo os termos comuns (LTDA, SA, EIRELI, etc). Quando "NOME_FANTASIA" é NULL, o código substitui o campo nulo pelo valor de "RAZAO_SOCIAL".
 
@@ -110,6 +141,8 @@ Dessa forma, conforme as tabelas avançadasm no fluxo, é definido um esquema, a
 A tabela gold.ans.custo_beneficiario, que calcula um indicador setorial relacionado à eficiência da operadora, é um bom exemplo, pois utiliza todas as 3 (três) fontes primárias para ser construída.
 
 Na camada gold, na maioria dos casos, utilizei a linguagem SQL para criar as tabelas:
+
+[custo_beneficiario.sql](https://github.com/GustavoG0mes/MVP3/blob/main/src/gold/custo_beneficiario.sql)
 
 custo_beneficiario.sql
 
